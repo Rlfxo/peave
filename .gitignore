@@ -1,0 +1,5 @@
+node_modules/
+.DS_Store
+*.log
+/tmp/
+# vendor/ is committed on purpose — highs.js + highs.wasm needed for the static site

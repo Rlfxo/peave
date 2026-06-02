@@ -1,0 +1,61 @@
+:root {
+  --navy: #1a3a5c; --navy2: #2c5a87; --accent: #1e88e5;
+  --sq: #e15b5b; --lp: #2faa6a; --pi: #9b59b6; --eng: #e0913a;
+  --bg: #f4f6f9; --card: #fff; --ink: #1f2a36; --muted: #6b7a8a; --line: #e3e9ef;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Apple SD Gothic Neo", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+  line-height: 1.5;
+}
+header { background: linear-gradient(135deg, var(--navy), var(--navy2)); color: #fff; padding: 22px 28px; }
+header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+header .accent { color: #7fd1ff; }
+header .sub { margin: 6px 0 0; font-size: .9rem; opacity: .92; }
+.badge { background: rgba(255,255,255,.18); border-radius: 6px; padding: 1px 8px; font-size: .8rem; white-space: nowrap; }
+
+main { display: grid; grid-template-columns: 320px 1fr; gap: 18px; padding: 18px; max-width: 1100px; margin: 0 auto; align-items: start; }
+@media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.panel h2 { margin: 0 0 14px; font-size: 1.05rem; color: var(--navy); }
+.panel h3 { margin: 22px 0 8px; font-size: .95rem; color: var(--navy); }
+
+.inputs label { display: block; font-size: .82rem; color: var(--muted); margin: 14px 0 0; font-weight: 600; }
+.inputs label output { float: right; color: var(--navy); font-variant-numeric: tabular-nums; font-weight: 700; }
+.inputs input[type=range] { width: 100%; margin-top: 6px; accent-color: var(--accent); }
+.inputs .sel select { width: 100%; margin-top: 6px; padding: 6px; border: 1px solid var(--line); border-radius: 7px; font: inherit; }
+.note { font-size: .74rem; color: var(--muted); margin-top: 16px; line-height: 1.5; background: #eef2f6; padding: 10px; border-radius: 8px; border-left: 3px solid var(--navy2); }
+.note code { background: #dde6ee; padding: 0 3px; border-radius: 3px; }
+
+.status { font-size: .78rem; font-weight: 500; color: var(--muted); }
+.status.ready { color: var(--lp); }
+.status.busy { color: var(--eng); }
+
+.compare { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px; margin: 8px 0 18px; }
+.bigcard { text-align: center; }
+.bigcard .cap { font-size: .8rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+.bar-wrap { height: 160px; display: flex; align-items: flex-end; justify-content: center; }
+.bar { width: 64px; border-radius: 8px 8px 0 0; transition: height .5s cubic-bezier(.2,.8,.2,1), background .3s; min-height: 4px; }
+.sq .bar { background: linear-gradient(var(--sq), #f08a8a); }
+.lp .bar { background: linear-gradient(var(--lp), #6fce9b); }
+.bigcard .peak { font-size: 1.3rem; font-weight: 800; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.arrow { font-size: 1.6rem; color: var(--lp); font-weight: 800; padding-bottom: 60px; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 540px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+.stat { background: #f7fafc; border: 1px solid var(--line); border-radius: 10px; padding: 10px; text-align: center; }
+.stat .k { font-size: .72rem; color: var(--muted); font-weight: 600; }
+.stat .val { font-size: 1.25rem; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+.stat .u { font-size: .68rem; color: var(--muted); }
+
+.chart-wrap { background: #fbfdff; border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+#pareto { width: 100%; height: auto; display: block; }
+.legend { font-size: .74rem; color: var(--muted); margin: 8px 0 0; display: flex; gap: 12px; flex-wrap: wrap; }
+.lg.peak { color: var(--sq); } .lg.eng { color: var(--eng); } .lg.pi { color: var(--pi); }
+.lg.star { color: var(--navy); } .lg.cur { color: var(--accent); }
+.betastar { font-size: .82rem; color: var(--ink); background: #eef6f0; border-left: 3px solid var(--lp); padding: 8px 10px; border-radius: 8px; margin-top: 10px; }
+
+footer { max-width: 1100px; margin: 0 auto; padding: 8px 18px 28px; font-size: .74rem; color: var(--muted); }
+footer code { background: #e6ebf0; padding: 0 4px; border-radius: 3px; }

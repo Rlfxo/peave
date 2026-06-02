@@ -1,0 +1,15 @@
+{
+  "name": "peave",
+  "version": "0.1.0",
+  "description": "PEAVE — Peak-Energy-Aware EV scheduling: interactive deadline-aware LP peak-shaving simulator for AC Level 2 charging (MSc thesis artifact)",
+  "type": "module",
+  "scripts": {
+    "test:lp": "node test_lp.mjs",
+    "test:sim": "node test_sim.mjs",
+    "serve": "python3 -m http.server 8080"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "highs": "^1.14.2"
+  }
+}

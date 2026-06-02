@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PEAVE — AC 완속 충전 Peak Shaving 시뮬레이터</title>
+  <meta name="description" content="AC 완속 충전기 deadline-aware LP 스케줄링 — 피크·운영사 수익 인터랙티브 데모 (석사논문 artifact, 동일 HiGHS 솔버)" />
+  <link rel="stylesheet" href="src/style.css" />
+  <!-- HiGHS WASM (논문 CVXPY+HIGHS 와 동일 엔진) — vendored, 오프라인 동작 -->
+  <script src="vendor/highs.js"></script>
+  <script>window.__highsFactory = (typeof Highs !== 'undefined') ? Highs : (typeof Module !== 'undefined' ? Module : null);</script>
+</head>
+<body>
+  <header>
+    <h1><span class="accent">PEAVE</span> — AC 완속 충전 Peak Shaving 시뮬레이터</h1>
+    <p class="sub">Deadline-aware LP 스케줄링 — 알고리즘 적용 전/후 <b>피크</b>와 <b>운영사 수익</b> 비교 ·
+      <span class="badge">동일 HiGHS 솔버 (논문 CVXPY+HIGHS)</span></p>
+  </header>
+
+  <main>
+    <section class="panel inputs">
+      <h2>입력</h2>
+      <label>주차장 규모 (충전기 수) <output id="oN">25</output>
+        <input id="N" type="range" min="5" max="40" step="1" value="25" /></label>
+      <label>방문 예상 차량 (대/일) <output id="oV">40</output>
+        <input id="V" type="range" min="5" max="120" step="1" value="40" /></label>
+      <label>유저 신뢰도 β (선언 채택률) <output id="oB">1.00</output>
+        <input id="B" type="range" min="0" max="1" step="0.05" value="1" /></label>
+      <label>유저 정직성 δ (선언 오차, 분) <output id="oD">0</output>
+        <input id="D" type="range" min="0" max="120" step="5" value="0" /></label>
+      <label>충전 판매단가 p_sell (₩/kWh) <output id="oPs">324.4</output>
+        <input id="Ps" type="range" min="150" max="500" step="0.1" value="324.4" /></label>
+      <label>기본요금 c_dem (₩/kW·월) <output id="oCd">8320</output>
+        <input id="Cd" type="range" min="0" max="12000" step="10" value="8320" /></label>
+      <label class="sel">도착 패턴
+        <select id="AM">
+          <option value="bimodal">통근형 (아침·저녁 2-peak)</option>
+          <option value="flat">균등</option>
+        </select></label>
+      <p class="note">엔진 = 논문의 검증된 LP(<code>min·maxₜ ΣP</code>) 그대로. 분포는 Phase B fleet(58,146 세션) 통계로 캘리브레이션. δ·ε는 deadline 압축 → energy shortfall.</p>
+    </section>
+
+    <section class="panel results">
+      <h2>결과 <span id="status" class="status">엔진 로딩…</span></h2>
+      <div class="compare">
+        <div class="bigcard sq">
+          <div class="cap">알고리즘 미적용 (StatusQuo)</div>
+          <div class="bar-wrap"><div class="bar" id="barSq"></div></div>
+          <div class="peak" id="peakSq">— kW</div>
+        </div>
+        <div class="arrow" id="redArrow">→</div>
+        <div class="bigcard lp">
+          <div class="cap">LP 적용 (β = <span id="capB">1.00</span>)</div>
+          <div class="bar-wrap"><div class="bar" id="barLp"></div></div>
+          <div class="peak" id="peakLp">— kW</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">피크 감소</div><div class="val" id="sRed">—</div></div>
+        <div class="stat"><div class="k">에너지 충족</div><div class="val" id="sEng">—</div></div>
+        <div class="stat"><div class="k">기본요금 절감</div><div class="val" id="sSave">—</div><div class="u">/월</div></div>
+        <div class="stat"><div class="k">운영 이익 Π</div><div class="val" id="sProfit">—</div><div class="u">/월</div></div>
+      </div>
+
+      <h3>β–Pareto · 이익 최적점 β*</h3>
+      <div class="chart-wrap"><svg id="pareto" viewBox="0 0 520 240" preserveAspectRatio="xMidYMid meet"></svg></div>
+      <p class="legend"><span class="lg peak">● 피크 (kW)</span> <span class="lg eng">● 에너지 (%)</span>
+        <span class="lg pi">● 이익 Π</span> <span class="lg star">★ β*</span> <span class="lg cur">▮ 현재 β</span></p>
+      <p id="betastar" class="betastar"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>석사논문 artifact — <b>AC EV 충전기 PWM 스케줄링을 위한 ML 기반 출차시간 예측 + Deadline-Aware Peak Shaving</b>.
+    웹 데모는 검증된 모델의 인터랙티브 illustration이며 실측 검증을 대체하지 않습니다.
+    경제 모델 상세 <code>docs/economic_model.md</code>.</p>
+  </footer>
+
+  <script type="module" src="src/main.mjs"></script>
+</body>
+</html>
