@@ -6,75 +6,93 @@
   <title>PEAVE — AC 완속 충전 Peak Shaving 시뮬레이터</title>
   <meta name="description" content="AC 완속 충전기 deadline-aware LP 스케줄링 — 피크·운영사 수익 인터랙티브 데모 (석사논문 artifact, 동일 HiGHS 솔버)" />
   <link rel="stylesheet" href="src/style.css" />
-  <!-- HiGHS WASM (논문 CVXPY+HIGHS 와 동일 엔진) — vendored, 오프라인 동작 -->
   <script src="vendor/highs.js"></script>
   <script>window.__highsFactory = (typeof Highs !== 'undefined') ? Highs : (typeof Module !== 'undefined' ? Module : null);</script>
 </head>
 <body>
   <header>
-    <h1><span class="accent">PEAVE</span> — AC 완속 충전 Peak Shaving 시뮬레이터</h1>
-    <p class="sub">Deadline-aware LP 스케줄링 — 알고리즘 적용 전/후 <b>피크</b>와 <b>운영사 수익</b> 비교 ·
-      <span class="badge">동일 HiGHS 솔버 (논문 CVXPY+HIGHS)</span></p>
+    <div class="head-row">
+      <div class="head-txt">
+        <h1><span class="accent">PEAVE</span> — <span data-i18n="sub_title">AC 완속 충전 Peak Shaving</span></h1>
+        <p class="sub"><span data-i18n="sub"></span> · <span class="badge" data-i18n="badge"></span></p>
+      </div>
+      <button id="langBtn" class="lang-btn" type="button">EN</button>
+    </div>
   </header>
 
   <main>
+    <!-- 1) 입력 (상단 전체) -->
     <section class="panel inputs">
-      <h2>입력</h2>
-      <label>주차장 규모 (충전기 수) <output id="oN">25</output>
-        <input id="N" type="range" min="5" max="40" step="1" value="25" /></label>
-      <label>방문 예상 차량 (대/일) <output id="oV">40</output>
-        <input id="V" type="range" min="5" max="120" step="1" value="40" /></label>
-      <label>유저 신뢰도 β (선언 채택률) <output id="oB">1.00</output>
-        <input id="B" type="range" min="0" max="1" step="0.05" value="1" /></label>
-      <label>유저 정직성 δ (선언 오차, 분) <output id="oD">0</output>
-        <input id="D" type="range" min="0" max="120" step="5" value="0" /></label>
-      <label>충전 판매단가 p_sell (₩/kWh) <output id="oPs">324.4</output>
-        <input id="Ps" type="range" min="150" max="500" step="0.1" value="324.4" /></label>
-      <label>기본요금 c_dem (₩/kW·월) <output id="oCd">8320</output>
-        <input id="Cd" type="range" min="0" max="12000" step="10" value="8320" /></label>
-      <label class="sel">도착 패턴
-        <select id="AM">
-          <option value="bimodal">통근형 (아침·저녁 2-peak)</option>
-          <option value="flat">균등</option>
-        </select></label>
-      <p class="note">엔진 = 논문의 검증된 LP(<code>min·maxₜ ΣP</code>) 그대로. 분포는 Phase B fleet(58,146 세션) 통계로 캘리브레이션. δ·ε는 deadline 압축 → energy shortfall.</p>
+      <h2 data-i18n="inputs_h"></h2>
+      <div class="in-grid">
+        <label><span data-i18n="in_N"></span> <output id="oN">25</output><input id="N" type="range" min="5" max="40" step="1" value="25" /></label>
+        <label><span data-i18n="in_V"></span> <output id="oV">70</output><input id="V" type="range" min="5" max="160" step="1" value="70" /></label>
+        <label><span data-i18n="in_beta"></span> <output id="oB">1.00</output><input id="B" type="range" min="0" max="1" step="0.05" value="1" /></label>
+        <label><span data-i18n="in_delta"></span> <output id="oD">0</output><input id="D" type="range" min="0" max="120" step="5" value="0" /></label>
+        <label><span data-i18n="in_psell"></span> <output id="oPs">324.4</output><input id="Ps" type="range" min="150" max="500" step="0.1" value="324.4" /></label>
+        <label><span data-i18n="in_cdem"></span> <output id="oCd">8320</output><input id="Cd" type="range" min="0" max="12000" step="10" value="8320" /></label>
+        <label class="sel"><span data-i18n="in_arrival"></span>
+          <select id="AM"><option value="bimodal" data-i18n="opt_bimodal"></option><option value="flat" data-i18n="opt_flat"></option></select></label>
+      </div>
+      <p class="note" data-i18n="note"></p>
+      <div class="run-row">
+        <button id="diceBtn" class="dice-btn" type="button">🎲 <span data-i18n="dice"></span></button>
+        <button id="runBtn" class="run-btn" type="button">▶ <span data-i18n="run"></span></button>
+      </div>
     </section>
 
+    <!-- 2) 애니메이션: 주차장(좌) + 타임라인(우) -->
+    <section class="panel anim-row">
+      <div class="anim-col parking-col">
+        <h3 data-i18n="parking_h"></h3>
+        <div class="park-wrap"><canvas id="parking"></canvas></div>
+      </div>
+      <div class="anim-col timeline-col">
+        <h3 data-i18n="timeline_h"></h3>
+        <div class="tl-ctrl">
+          <button id="tlPlay" type="button">▶</button>
+          <button id="tlReplay" type="button">↻</button>
+          <select id="tlSpeed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+          <input id="tlSeek" type="range" min="0" max="96" step="1" value="96" />
+        </div>
+        <div class="tl-wrap"><canvas id="timeline"></canvas></div>
+        <p class="legend"><span class="lg sq" data-i18n="lg_sq"></span> <span class="lg lp" data-i18n="lg_lp"></span>
+          <span class="lg gold" data-i18n="lg_gold"></span> <span class="lg dot" data-i18n="lg_dot"></span> <span class="lg cur" data-i18n="lg_cur"></span></p>
+      </div>
+    </section>
+
+    <!-- 3) 결과 요약 + β-Pareto -->
     <section class="panel results">
-      <h2>결과 <span id="status" class="status">엔진 로딩…</span></h2>
+      <h2><span data-i18n="res_h"></span> <span id="status" class="status"></span></h2>
       <div class="compare">
         <div class="bigcard sq">
-          <div class="cap">알고리즘 미적용 (StatusQuo)</div>
+          <div class="cap" data-i18n="cap_sq"></div>
           <div class="bar-wrap"><div class="bar" id="barSq"></div></div>
-          <div class="peak" id="peakSq">— kW</div>
+          <div class="peak" id="peakSq">—</div>
         </div>
         <div class="arrow" id="redArrow">→</div>
         <div class="bigcard lp">
-          <div class="cap">LP 적용 (β = <span id="capB">1.00</span>)</div>
+          <div class="cap"><span data-i18n="cap_lp"></span> (β = <span id="capB">1.00</span>)</div>
           <div class="bar-wrap"><div class="bar" id="barLp"></div></div>
-          <div class="peak" id="peakLp">— kW</div>
+          <div class="peak" id="peakLp">—</div>
         </div>
       </div>
       <div class="stats">
-        <div class="stat"><div class="k">피크 감소</div><div class="val" id="sRed">—</div></div>
-        <div class="stat"><div class="k">에너지 충족</div><div class="val" id="sEng">—</div></div>
-        <div class="stat"><div class="k">기본요금 절감</div><div class="val" id="sSave">—</div><div class="u">/월</div></div>
-        <div class="stat"><div class="k">운영 이익 Π</div><div class="val" id="sProfit">—</div><div class="u">/월</div></div>
+        <div class="stat"><div class="k" data-i18n="stat_profit"></div><div class="val" id="sProfit">—</div><div class="u" data-i18n="per_month"></div></div>
+        <div class="stat"><div class="k" data-i18n="stat_lever"></div><div class="val" id="sLever">—</div></div>
+        <div class="stat"><div class="k" data-i18n="stat_red"></div><div class="val" id="sRed">—</div></div>
+        <div class="stat"><div class="k" data-i18n="stat_eng"></div><div class="val" id="sEng">—</div></div>
       </div>
 
-      <h3>β–Pareto · 이익 최적점 β*</h3>
+      <h3 data-i18n="pareto_h"></h3>
       <div class="chart-wrap"><svg id="pareto" viewBox="0 0 520 240" preserveAspectRatio="xMidYMid meet"></svg></div>
-      <p class="legend"><span class="lg peak">● 피크 (kW)</span> <span class="lg eng">● 에너지 (%)</span>
-        <span class="lg pi">● 이익 Π</span> <span class="lg star">★ β*</span> <span class="lg cur">▮ 현재 β</span></p>
+      <p class="legend"><span class="lg peak" data-i18n="lg_peak"></span> <span class="lg eng" data-i18n="lg_eng"></span>
+        <span class="lg pi" data-i18n="lg_pi"></span> <span class="lg star" data-i18n="lg_star"></span> <span class="lg cur" data-i18n="lg_cur"></span></p>
       <p id="betastar" class="betastar"></p>
     </section>
   </main>
 
-  <footer>
-    <p>석사논문 artifact — <b>AC EV 충전기 PWM 스케줄링을 위한 ML 기반 출차시간 예측 + Deadline-Aware Peak Shaving</b>.
-    웹 데모는 검증된 모델의 인터랙티브 illustration이며 실측 검증을 대체하지 않습니다.
-    경제 모델 상세 <code>docs/economic_model.md</code>.</p>
-  </footer>
+  <footer><p data-i18n="footer"></p> <code>docs/economic_model.md</code></footer>
 
   <script type="module" src="src/main.mjs"></script>
 </body>

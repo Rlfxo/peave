@@ -82,21 +82,25 @@ export function solveDay(highs, sessions, N, nSlots, cst, pContractKw = 0) {
   return { peakKw: sol.ObjectiveValue, status: 'Optimal', energyByCharger, scheduleKw };
 }
 
-// StatusQuo baseline: uncontrolled — charge at I_cap from arrival until energy met.
-// Returns per-slot station kW + peak. Uses TRUE windows (no deadline shaping).
-export function statusQuo(sessions, N, nSlots, cst) {
+// StatusQuo (uncontrolled, capacity-throttled): charge ASAP at I_cap from arrival;
+// when station demand exceeds P_cap, all active sessions are throttled fair-share (proportional).
+// Front-loads → wastes off-peak capacity → energy shortfall under a binding cap. TRUE windows.
+export function statusQuo(sessions, N, nSlots, cst, pCapKw = 0) {
+  const capAmps = pCapKw > 0 ? pCapKw / cst.kwPerAmp : Infinity;
   const stationAmps = new Array(nSlots).fill(0);
   const energyByCharger = new Array(N).fill(0);
-  for (const s of sessions) {
-    let remainingWh = s.energyTargetWh;
-    const a = Math.max(0, s.arrivalSlot), d = Math.min(nSlots, s.departureSlot);
-    for (let t = a; t < d && remainingWh > 1e-9; t++) {
-      const deliver = Math.min(cst.whPerAmpSlot * cst.iCap, remainingWh); // Wh this slot at I_cap
-      const amps = deliver / cst.whPerAmpSlot;
-      stationAmps[t] += amps;
-      energyByCharger[s.chargerIndex] += deliver;
-      remainingWh -= deliver;
-    }
+  const rem = sessions.map((s) => (s.requestedWh != null ? s.requestedWh : s.energyTargetWh));
+  for (let t = 0; t < nSlots; t++) {
+    const act = [];
+    sessions.forEach((s, i) => { if (s.arrivalSlot <= t && t < s.departureSlot && rem[i] > 1e-6) act.push(i); });
+    if (!act.length) continue;
+    const want = act.map((i) => Math.min(cst.iCap, rem[i] / cst.whPerAmpSlot)); // amps wanted this slot
+    const total = want.reduce((a, b) => a + b, 0);
+    const scale = total > capAmps ? capAmps / total : 1;
+    act.forEach((i, j) => {
+      const amps = want[j] * scale, wh = amps * cst.whPerAmpSlot;
+      energyByCharger[sessions[i].chargerIndex] += wh; rem[i] -= wh; stationAmps[t] += amps;
+    });
   }
   const scheduleKw = stationAmps.map((a) => a * cst.kwPerAmp);
   return { peakKw: Math.max(0, ...scheduleKw), scheduleKw, energyByCharger };

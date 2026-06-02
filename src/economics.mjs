@@ -1,6 +1,7 @@
 // Operator economics — docs/economic_model.md (Thesis.no2)
 //   Π = m·E − κ·c_dem·P_peak ,  m = p_sell − c_buy (margin)
 // Demand-charge saving is the peak-shaving lever; β* = corner (β=1 for realistic m).
+import { getLang } from './i18n.mjs';
 
 export function economics({
   peakSqKw, peakLpKw, requestedWh, deliveredWh,
@@ -21,7 +22,13 @@ export function economics({
 }
 
 export function fmtWon(won) {
-  if (Math.abs(won) >= 1e8) return (won / 1e8).toFixed(2) + '억원';
-  if (Math.abs(won) >= 1e4) return (won / 1e4).toFixed(1) + '만원';
+  const a = Math.abs(won);
+  if (getLang() === 'en') {
+    if (a >= 1e6) return '₩' + (won / 1e6).toFixed(2) + 'M';
+    if (a >= 1e3) return '₩' + (won / 1e3).toFixed(0) + 'k';
+    return '₩' + Math.round(won);
+  }
+  if (a >= 1e8) return (won / 1e8).toFixed(2) + '억원';
+  if (a >= 1e4) return (won / 1e4).toFixed(1) + '만원';
   return Math.round(won).toLocaleString() + '원';
 }
